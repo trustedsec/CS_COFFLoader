@@ -1,0 +1,7 @@
+bin/
+*.swp
+Scripts/__pycache__/
+Scripts/results/
+.git_w/
+.git_l/
+
