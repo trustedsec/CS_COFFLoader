@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 
 namespace COFFLoader
 {
-    public class Agent
+    public class COFFLoader 
     {
         private const string COMMAND_COFF = "COFF";
 		private static string beaconOutputData;
@@ -20,7 +20,7 @@ namespace COFFLoader
 
             try
             {
-                Debug.WriteLine("Agent.RunCoff()");
+                Debug.WriteLine("COFFLoader.RunCoff()");
 
                 //Init stuff
                 // args = "overwrite_bool filename b64_file"
