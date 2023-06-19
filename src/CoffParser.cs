@@ -192,7 +192,7 @@ namespace COFFLoader
 
             if (data == null){
                 Debug.WriteLine("Can't execute NULL\n");
-                return 1;
+				goto cleanup;
             }
 
             IntPtr unmanagedData = Marshal.AllocHGlobal(data.Length);
