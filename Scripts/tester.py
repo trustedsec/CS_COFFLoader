@@ -32,9 +32,9 @@ def execute( bof, format_str="", arguments=[] ):
     if not os.path.isdir("..\\Scripts\\results\\%s" % time_d):
         os.mkdir("..\\Scripts\\results\\%s" % time_d)
     if bof == "dir":
-        cmd = EXE + " ..\\..\\..\\..\\CS-Situational-Awareness-BOF\\SA\\%s\\%s.x64.o.orig %s >> ..\\Scripts\\results\\%s\\%s.txt" % (bof, bof, args, time_d, bof)    
+        cmd = EXE + " go ..\\..\\..\\..\\CS-Situational-Awareness-BOF\\SA\\%s\\%s.x64.o.orig %s >> ..\\Scripts\\results\\%s\\%s.txt" % (bof, bof, args, time_d, bof)    
     else:
-        cmd = EXE + " ..\\..\\..\\..\\CS-Situational-Awareness-BOF\\SA\\%s\\%s.x64.o %s >> ..\\Scripts\\results\\%s\\%s.txt" % (bof, bof, args, time_d, bof)    
+        cmd = EXE + " go ..\\..\\..\\..\\CS-Situational-Awareness-BOF\\SA\\%s\\%s.x64.o %s >> ..\\Scripts\\results\\%s\\%s.txt" % (bof, bof, args, time_d, bof)    
     print( cmd )
     os.system( cmd )
 

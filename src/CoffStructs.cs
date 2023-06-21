@@ -1,78 +1,92 @@
-using System;                                                                   
-using System.Runtime.InteropServices;                                           
+using System;
+using System.Runtime.InteropServices;
 
 namespace COFFLoader
-{          
-     #region structs                                                             
-     [StructLayout(LayoutKind.Sequential)]                                       
-     public unsafe struct COFF_FILE_HEADER
-     {                                                                           
-         public ushort Machine;
-         public ushort NumberOfSections; 
-         public int TimeDateStamp;
-         public int PointerToSymbolTable;
-         public int NumberOfSymbols;
-         public ushort SizeOfOptionalHeader;
-         public ushort Characteristics;
-     }                                                                           
-                   
-     [StructLayout(LayoutKind.Sequential)]                                       
-     public unsafe struct COFF_SECT
-     {
-         public fixed byte Name[8];
-         public int VirtualSize;
-         public int VirtualAddress;
-         public int SizeOfRawData;
-         public int PointerToRawData;
-         public int PointerToRelocations;
-         public int PointerToLineNumbers;
-         public ushort NumberOfRelocations;
-         public ushort NumberOfLinenumbers;
-         public int Characteristics;
-     }
+{
+    #region structs
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct COFF_FILE_HEADER
+    {
+        public ushort Machine;
+        public ushort NumberOfSections;
+        public int TimeDateStamp;
+        public int PointerToSymbolTable;
+        public int NumberOfSymbols;
+        public ushort SizeOfOptionalHeader;
+        public ushort Characteristics;
+    }
 
-     [StructLayout(LayoutKind.Sequential, Pack=1)]                                       
-     public unsafe struct COFF_RELOC
-     {
-         public int VirtualAddress;
-         public int SymbolTableIndex;
-         public ushort Type;
-     }
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct COFF_SECT
+    {
+        public fixed byte Name[8];
+        public int VirtualSize;
+        public int VirtualAddress;
+        public int SizeOfRawData;
+        public int PointerToRawData;
+        public int PointerToRelocations;
+        public int PointerToLineNumbers;
+        public ushort NumberOfRelocations;
+        public ushort NumberOfLinenumbers;
+        public int Characteristics;
+    }
 
-     [StructLayout(LayoutKind.Explicit, Pack=1)] 
-     public unsafe struct COFF_SYM
-     {
-         [System.Runtime.InteropServices.FieldOffset(0)] public fixed byte Name[8];
-         [System.Runtime.InteropServices.FieldOffset(0)] public fixed int value_u[2];
-         [System.Runtime.InteropServices.FieldOffset(8)]public int Value;
-         [System.Runtime.InteropServices.FieldOffset(0xc)]public ushort SectionNumber;
-         [System.Runtime.InteropServices.FieldOffset(0xe)]public ushort Type;
-         [System.Runtime.InteropServices.FieldOffset(0x10)]public byte StorageClass;
-         [System.Runtime.InteropServices.FieldOffset(0x11)]public byte NumberOfAuxSymbols;
-     }
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public unsafe struct COFF_RELOC
+    {
+        public int VirtualAddress;
+        public int SymbolTableIndex;
+        public ushort Type;
+    }
 
-     [StructLayout(LayoutKind.Sequential)]                                       
-     public unsafe struct BEACON_FUNCTION 
-     {
-         public uint hash;
-         public void* function;
-         public BEACON_FUNCTION(uint hash, void* function)
-         {
+    [StructLayout(LayoutKind.Explicit, Pack = 1)]
+    public unsafe struct COFF_SYM
+    {
+        [System.Runtime.InteropServices.FieldOffset(0)]
+        public fixed byte Name[8];
+
+        [System.Runtime.InteropServices.FieldOffset(0)]
+        public fixed int value_u[2];
+
+        [System.Runtime.InteropServices.FieldOffset(8)]
+        public int Value;
+
+        [System.Runtime.InteropServices.FieldOffset(0xc)]
+        public ushort SectionNumber;
+
+        [System.Runtime.InteropServices.FieldOffset(0xe)]
+        public ushort Type;
+
+        [System.Runtime.InteropServices.FieldOffset(0x10)]
+        public byte StorageClass;
+
+        [System.Runtime.InteropServices.FieldOffset(0x11)]
+        public byte NumberOfAuxSymbols;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct BEACON_FUNCTION
+    {
+        public uint hash;
+        public void* function;
+
+        public BEACON_FUNCTION(uint hash, void* function)
+        {
             this.hash = hash;
             this.function = function;
-         }
-     }
+        }
+    }
     #endregion
 
     unsafe class StructHelper
     {
-        static public unsafe string ConvertToString( byte* arr)
+        static public unsafe string ConvertToString(byte* arr)
         {
-            return  new string((sbyte*)arr);
+            return new string((sbyte*)arr);
         }
 
-        static public string PrintStruct( COFF_FILE_HEADER* data )
-        { 
+        static public string PrintStruct(COFF_FILE_HEADER* data)
+        {
             string ret = "";
             ret += "COFF_FILE_HEADER\n";
             ret += String.Format("\tMachine:              0x{0:X}\n", data->Machine);
@@ -84,8 +98,9 @@ namespace COFFLoader
             ret += String.Format("\tCharacteristics:      0x{0:X}\n", data->Characteristics);
             return ret;
         }
-        static public string PrintStruct( COFF_SECT* data )
-        { 
+
+        static public string PrintStruct(COFF_SECT* data)
+        {
             string ret = "";
             ret += "COFF_SECT\n";
             ret += String.Format("\tName:                 {0}\n", ConvertToString(data->Name));
@@ -100,8 +115,9 @@ namespace COFFLoader
             ret += String.Format("\tCharacteristics:      0x{0:X}\n", data->Characteristics);
             return ret;
         }
-        static public string PrintStruct( COFF_RELOC* data )
-        { 
+
+        static public string PrintStruct(COFF_RELOC* data)
+        {
             string ret = "";
             ret += "COFF_RELOC\n";
             ret += String.Format("\tVirtualAddress:       0x{0:X}\n", data->VirtualAddress);
@@ -109,8 +125,9 @@ namespace COFFLoader
             ret += String.Format("\tType:                 0x{0:X}\n", data->Type);
             return ret;
         }
-        static public string PrintStruct( COFF_SYM* data )
-        { 
+
+        static public string PrintStruct(COFF_SYM* data)
+        {
             string ret = "";
             ret += "COFF_SYM\n";
             ret += String.Format("\tName:                 {0}\n", ConvertToString(data->Name));
@@ -141,6 +158,7 @@ namespace COFFLoader
             WriteWatch = 0x200000,
             LargePages = 0x20000000
         }
+
         public enum MemoryProtection : UInt32
         {
             PAGE_EXECUTE = 0x00000010,
@@ -158,33 +176,53 @@ namespace COFFLoader
 
         public static int IMAGE_REL_AMD64_ADDR64 = 0x0001; // TODO: Move this to a global area
         public static int IMAGE_REL_AMD64_ADDR32NB = 0x0003;
+
         /* Most common from the looks of it, just 32-bit relative address from the byte following the relocation */
-        public static int IMAGE_REL_AMD64_REL32 =    0x0004;
-        public static int IMAGE_REL_AMD64_REL32_5 =  0x0009;
+        public static int IMAGE_REL_AMD64_REL32 = 0x0004;
+        public static int IMAGE_REL_AMD64_REL32_5 = 0x0009;
 
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern uint GetLastError();
 
-        [DllImport("msvcrt.dll", EntryPoint = "memcpy", CallingConvention = CallingConvention.Cdecl, SetLastError = false)]
+        [DllImport(
+            "msvcrt.dll",
+            EntryPoint = "memcpy",
+            CallingConvention = CallingConvention.Cdecl,
+            SetLastError = false
+        )]
         public static extern IntPtr memcpy(IntPtr dest, byte[] src, UInt32 count);
 
-        [DllImport("msvcrt.dll", EntryPoint = "memcpy", CallingConvention = CallingConvention.Cdecl, SetLastError = false)]
-        public static extern void* Memcpy(byte* dest, byte* src, void* count);      
+        [DllImport(
+            "msvcrt.dll",
+            EntryPoint = "memcpy",
+            CallingConvention = CallingConvention.Cdecl,
+            SetLastError = false
+        )]
+        public static extern void* Memcpy(byte* dest, byte* src, void* count);
 
         [DllImport("kernel32.dll")]
-        public static extern IntPtr VirtualAlloc(IntPtr lpAddress, uint dwSize, uint flAllocationType, uint flProtect);
+        public static extern IntPtr VirtualAlloc(
+            IntPtr lpAddress,
+            uint dwSize,
+            uint flAllocationType,
+            uint flProtect
+        );
 
         [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
-        public static extern bool VirtualFreeEx(IntPtr hProcess, IntPtr lpAddress, IntPtr dwSize, AllocationType dwFreeType);
+        public static extern bool VirtualFreeEx(
+            IntPtr hProcess,
+            IntPtr lpAddress,
+            IntPtr dwSize,
+            AllocationType dwFreeType
+        );
 
-		[DllImport("kernel32.dll")]
-		public static extern IntPtr GetModuleHandle(string lpModuleName);
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr GetModuleHandle(string lpModuleName);
 
-		[DllImport("kernel32.dll")]
-		public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 
-		[DllImport("kernel32.dll")]
-		public static extern IntPtr LoadLibrary(string dllToLoad);
-
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr LoadLibrary(string dllToLoad);
     }
 }
