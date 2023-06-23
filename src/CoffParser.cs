@@ -153,6 +153,17 @@ namespace COFFLoader
 
             List<IntPtr> sectionMapping;
             IntPtr functionMapping;
+            IntPtr unmanagedData = IntPtr.Zero;
+            try
+            {
+                unmanagedData = Marshal.AllocHGlobal(data.Length);
+            }catch (Exception e)
+            {
+                Debug.WriteLine(string.Format("Exception: '{0}'", e));
+                retcode = 1;
+                goto cleanup;
+            }
+
 
             if (isBeaconObject == true)
             {
@@ -196,7 +207,6 @@ namespace COFFLoader
                 goto cleanup;
             }
 
-            IntPtr unmanagedData = Marshal.AllocHGlobal(data.Length);
             Marshal.Copy(data, 0, unmanagedData, data.Length);
             byte* coff_data = (byte*)unmanagedData.ToPointer();
             coff_header = (COFF_FILE_HEADER*)coff_data;
@@ -589,6 +599,9 @@ namespace COFFLoader
                 }
             }
             cleanup:
+            if (unmanagedData != IntPtr.Zero)
+                Marshal.FreeHGlobal(unmanagedData);
+
             if (isBeaconObject == false)
             {
                 CleanUpMemoryAllocations();
