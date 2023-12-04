@@ -100,23 +100,34 @@ namespace COFFLoader
             {
                 if (hash_djb(Encoding.Default.GetBytes(localfunc)) == tmp.hash)
                 {
-                    Debug.WriteLine("\t\tInternalFunction: {0}\n", localfunc);
+                    Debug.WriteLine(String.Format("\t\tInternalFunction: {0}", localfunc));
                     functionaddress = tmp.function;
                     return functionaddress;
                 }
             }
 
+            Debug.WriteLine(String.Format("\t\tlocalfunc : ({0})", localfunc));
+			if ( (localfunc== "LoadLibraryA") || (localfunc== "GetProcAddress") || (localfunc== "FreeLibrary")|| (localfunc== "GetModuleHandleA"))
+			{
+                Debug.WriteLine(String.Format("\t\tFOUND IT: {0}\n", localfunc));
+
+				hModule = Win32.LoadLibrary("Kernel32.dll");
+                functionaddress = (void*)Win32.GetProcAddress(hModule, localfunc);
+                Debug.WriteLine(String.Format("\t\tProcaddress: 0x{0:X}", ((IntPtr)functionaddress).ToInt64()));
+
+                return functionaddress;
+			}
             if (symbolstring.Contains("$") == false)
             {
-                Debug.WriteLine("Error: process_symbol. No library found in {0}", localfunc);
+                Debug.WriteLine(String.Format("Error: process_symbol. No library found in {0}", localfunc));
                 return null;
             }
             subs = localfunc.Split(new char[] { '$' });
             locallib = subs[0] + ".dll";
-            Debug.WriteLine("\t\tLibrary: {0}", locallib);
+            Debug.WriteLine(String.Format("\t\tLibrary: {0}", locallib));
             subs = localfunc.Substring(subs[0].Length + 1).Split(new char[] { '@' });
             localfunc2 = subs[0];
-            Debug.WriteLine("\t\tFunction: {0}", localfunc2);
+            Debug.WriteLine(String.Format("\t\tFunction: {0}", localfunc2));
 
             hModule = Win32.GetModuleHandle(locallib);
             if (hModule == IntPtr.Zero)
@@ -124,7 +135,7 @@ namespace COFFLoader
                 hModule = Win32.LoadLibrary(locallib);
             }
             functionaddress = (void*)Win32.GetProcAddress(hModule, localfunc2);
-            Debug.WriteLine("\t\tProcaddress: 0x{0:X}", ((IntPtr)functionaddress).ToInt64());
+            Debug.WriteLine(String.Format("\t\tProcaddress: 0x{0:X}", ((IntPtr)functionaddress).ToInt64()));
 
             return functionaddress;
         }
@@ -193,7 +204,7 @@ namespace COFFLoader
                     (uint)Win32.MemoryProtection.PAGE_EXECUTE_READWRITE
                 );
                 functionMapping = beaconFunctionMapping;
-                Debug.WriteLine("functionMapping 0x{0:X}", functionMapping.ToInt64());
+                Debug.WriteLine(string.Format("functionMapping 0x{0:X}", functionMapping.ToInt64()));
             }
             else
             {
@@ -214,17 +225,17 @@ namespace COFFLoader
 
             for (counter = 0; counter < coff_header->NumberOfSections; counter++)
             {
-                Debug.WriteLine(
+                Debug.WriteLine(string.Format(
                     "header size: 0x{0:X} size char 0x{1:X} size byte 0x{2:X}",
                     sizeof(COFF_FILE_HEADER),
                     sizeof(char),
-                    sizeof(byte)
+                    sizeof(byte))
                 );
-                Debug.WriteLine(
+                Debug.WriteLine(string.Format(
                     "sect size: {0}, 0x{1:X} 0x{2:X}",
                     counter,
                     sizeof(COFF_SECT),
-                    counter * sizeof(COFF_SECT)
+                    counter * sizeof(COFF_SECT))
                 );
                 coff_sect = (COFF_SECT*)(
                     coff_data + sizeof(COFF_FILE_HEADER) + (counter * sizeof(COFF_SECT))
@@ -232,7 +243,7 @@ namespace COFFLoader
                 Debug.WriteLine(StructHelper.PrintStruct(coff_sect));
                 int rawSize = coff_sect->SizeOfRawData;
 
-                Debug.WriteLine(
+                Debug.WriteLine(String.Format(
                     "size: 0x{0:X}\nalloctype: 0x{1:X}\nProtect: 0x{2:X}",
                     rawSize,
                     (uint)(
@@ -240,7 +251,7 @@ namespace COFFLoader
                         | Win32.AllocationType.Reserve
                         | Win32.AllocationType.TopDown
                     ),
-                    (uint)Win32.MemoryProtection.PAGE_EXECUTE_READWRITE
+                    (uint)Win32.MemoryProtection.PAGE_EXECUTE_READWRITE)
                 );
                 IntPtr tmpAddr = Win32.VirtualAlloc(
                     IntPtr.Zero,
@@ -257,7 +268,7 @@ namespace COFFLoader
                     Debug.WriteLine("TmpAddr == 0");
                     Debug.WriteLine(Win32.GetLastError());
                 }
-                Debug.WriteLine("Allocated section 0x{0} at 0x{1:X}\n", counter, tmpAddr.ToInt64());
+                Debug.WriteLine(string.Format("Allocated section 0x{0} at 0x{1:X}\n", counter, tmpAddr.ToInt64()));
                 if (coff_sect->PointerToRawData > 0)
                 {
                     memcpy(tmpAddr, coff_data + coff_sect->PointerToRawData, rawSize);
@@ -269,7 +280,7 @@ namespace COFFLoader
             /* Start parsing the relocations, and *hopefully* handle them correctly. */
             for (counter = 0; counter < coff_header->NumberOfSections; counter++)
             {
-                Debug.WriteLine("Doing Relocations of section: {0}\n", counter);
+                Debug.WriteLine(String.Format("Doing Relocations of section: {0}\n", counter));
                 coff_sect = (COFF_SECT*)(
                     coff_data + sizeof(COFF_FILE_HEADER) + (counter * sizeof(COFF_SECT))
                 );
@@ -308,17 +319,17 @@ namespace COFFLoader
                                             + coff_reloc->VirtualAddress
                                     )
                                 );
-                            Debug.WriteLine(
+                            Debug.WriteLine(string.Format(
                                 "\tReadin longOffsetValue : 0x{0:llX}",
-                                longoffsetvalue
+                                longoffsetvalue)
                             );
                             longoffsetvalue =
                                 (ulong)sectionMapping[coff_sym->SectionNumber - 1].ToInt64()
                                 + longoffsetvalue;
-                            Debug.WriteLine(
+                            Debug.WriteLine(string.Format(
                                 "\tModified longOffsetValue : 0x{0:llX} Base Address: 0x{1:llX}",
                                 longoffsetvalue,
-                                sectionMapping[coff_sym->SectionNumber - 1]
+                                sectionMapping[coff_sym->SectionNumber - 1])
                             );
                             Marshal.WriteInt64(
                                 new IntPtr(
@@ -330,7 +341,7 @@ namespace COFFLoader
                         else if (coff_reloc->Type == Win32.IMAGE_REL_AMD64_ADDR32NB) /* This is Type == 3 relocation code */
                         {
                             Debug.WriteLine("coff_sym->value_u[0] != 0  <==> coff_reloc->type = 3");
-                            Debug.WriteLine("\tReadin counter: 0x{0:X}", counter);
+                            Debug.WriteLine(String.Format("\tReadin counter: 0x{0:X}", counter));
                             offsetvalue = (uint)
                                 Marshal.ReadInt32(
                                     new IntPtr(
@@ -342,9 +353,9 @@ namespace COFFLoader
                                 sectionMapping[coff_sym->SectionNumber - 1].ToInt64() + offsetvalue;
                             long b =
                                 sectionMapping[counter].ToInt64() + coff_reloc->VirtualAddress + 4;
-                            Debug.WriteLine("\tReadin OffsetValue : 0x{0:X}", offsetvalue);
-                            Debug.WriteLine("\t\tReferenced Section: 0x{0:X}", a);
-                            Debug.WriteLine("\t\tEnd of Relocation Bytes: 0x{0:X}", b);
+                            Debug.WriteLine(String.Format("\tReadin OffsetValue : 0x{0:X}", offsetvalue));
+                            Debug.WriteLine(String.Format("\t\tReferenced Section: 0x{0:X}", a));
+                            Debug.WriteLine(String.Format("\t\tEnd of Relocation Bytes: 0x{0:X}", b));
                             if ((a - b) > 0xffffffff)
                             {
                                 Console.WriteLine("Relocations > 4 gigs away, exiting");
@@ -352,11 +363,11 @@ namespace COFFLoader
                                 goto cleanup;
                             }
                             offsetvalue = (uint)(a - b);
-                            Debug.WriteLine("\tOffsetValue : 0x{0:X}\n", offsetvalue);
-                            Debug.WriteLine(
+                            Debug.WriteLine(String.Format("\tOffsetValue : 0x{0:X}\n", offsetvalue));
+                            Debug.WriteLine(String.Format(
                                 "\t\tSetting 0x{0:X} to 0x{1:X}\n",
                                 sectionMapping[counter].ToInt64() + coff_reloc->VirtualAddress,
-                                offsetvalue
+                                offsetvalue)
                             );
                             Marshal.WriteInt32(new IntPtr(b - 4), (int)offsetvalue);
                         }
@@ -370,7 +381,7 @@ namespace COFFLoader
                                             + coff_reloc->VirtualAddress
                                     )
                                 );
-                            Debug.WriteLine("\t\tReadin offset value: 0x{0:X}", offsetvalue);
+                            Debug.WriteLine(String.Format("\t\tReadin offset value: 0x{0:X}", offsetvalue));
                             if (coff_sym->SectionNumber == 0 && coff_sym->Value == 0)
                             {
                                 Debug.WriteLine("External Function found: ");
@@ -395,13 +406,13 @@ namespace COFFLoader
                                 offsetvalue += (uint)(
                                     coff_reloc->Type - Win32.IMAGE_REL_AMD64_REL32
                                 );
-                                Debug.WriteLine("\t\tRelative address: 0x{0:X}", offsetvalue);
+                                Debug.WriteLine(String.Format("\t\tRelative address: 0x{0:X}", offsetvalue));
                                 Marshal.WriteInt32(new IntPtr(b - 4), (int)offsetvalue);
                             }
                         }
                         else
                         {
-                            Debug.WriteLine("No code for relocation type: {0}", coff_reloc->Type);
+                            Debug.WriteLine(String.Format("No code for relocation type: {0}", coff_reloc->Type));
                         }
                     }
                     else
@@ -416,7 +427,7 @@ namespace COFFLoader
                         string functionName = Marshal.PtrToStringAnsi(
                             new IntPtr((char*)(coff_data + offset))
                         );
-                        Debug.WriteLine("offset 0x{0:X}, functionName {1}", offset, functionName);
+                        Debug.WriteLine(String.Format("offset 0x{0:X}, functionName {1}", offset, functionName));
 
                         void* funcptrlocation = process_symbol(functionName);
                         if (funcptrlocation == null && isBeaconObject == false)
@@ -431,15 +442,15 @@ namespace COFFLoader
                             Debug.WriteLine("coff_sym->value_u[0] == 0  <==> coff_reloc->type = 4");
                             long tmp = functionMapping.ToInt64();
                             Debug.WriteLine("Doing function relocation\n");
-                            Debug.WriteLine("\tbase functionMapping \t0x{0:X}", tmp);
-                            Debug.WriteLine(
+                            Debug.WriteLine(String.Format("\tbase functionMapping \t0x{0:X}", tmp));
+                            Debug.WriteLine(String.Format(
                                 "\tsectionMapping[{0}] \t 0x{1:X}",
                                 counter,
-                                sectionMapping[counter].ToInt64()
+                                sectionMapping[counter].ToInt64() )
                             );
-                            Debug.WriteLine(
+                            Debug.WriteLine( string.Format(
                                 "\tdifference 0x{0:X}",
-                                tmp - sectionMapping[counter].ToInt64()
+                                tmp - sectionMapping[counter].ToInt64() )
                             );
                             long a = tmp + functionMappingCount * 8;
                             long b =
@@ -457,12 +468,12 @@ namespace COFFLoader
                                 BitConverter.GetBytes(new IntPtr(funcptrlocation).ToInt64()),
                                 sizeof(long)
                             );
-                            Debug.WriteLine("\tfunctionMapping addr:\t0x{0:X}", a);
-                            Debug.WriteLine(
+                            Debug.WriteLine(string.Format("\tfunctionMapping addr:\t0x{0:X}", a));
+                            Debug.WriteLine(string.Format(
                                 "\t\tRelative address : 0x{0:X}",
-                                new IntPtr(b - 4).ToInt64()
+                                new IntPtr(b - 4).ToInt64())
                             );
-                            Debug.WriteLine("\t\toffset value: 0x{0:X}", (a - b));
+                            Debug.WriteLine(string.Format("\t\toffset value: 0x{0:X}", (a - b)));
                             Win32.memcpy(
                                 new IntPtr(b - 4),
                                 BitConverter.GetBytes(a - b),
@@ -492,17 +503,17 @@ namespace COFFLoader
                                 retcode = 1;
                                 goto cleanup;
                             }
-                            Debug.WriteLine("\t\tReadin offset value: 0x{0:X}", offsetvalue1);
+                            Debug.WriteLine(string.Format("\t\tReadin offset value: 0x{0:X}", offsetvalue1));
                             offsetvalue1 +=
                                 sectionMapping[coff_sym->SectionNumber - 1].ToInt64() - b;
                             offsetvalue1 += coff_sym->Value;
                             offsetvalue1 += (coff_reloc->Type - Win32.IMAGE_REL_AMD64_REL32);
-                            Debug.WriteLine("\t\tRelative address: 0x{0:X}", offsetvalue1);
+                            Debug.WriteLine(string.Format("\t\tRelative address: 0x{0:X}", offsetvalue1));
                             Marshal.WriteIntPtr(c, new IntPtr(offsetvalue1));
                         }
                         else
                         {
-                            Debug.WriteLine("No code for relocation type: {0}", coff_reloc->Type);
+                            Debug.WriteLine(string.Format("No code for relocation type: {0}", coff_reloc->Type));
                         }
                     }
                 }
@@ -519,10 +530,10 @@ namespace COFFLoader
                 {
                     if (memcmp(coff_sym->Name, Encoding.Default.GetString(functionname)) == 0)
                     {
-                        Debug.WriteLine(
+                        Debug.WriteLine(string.Format(
                             "\t\tFound entry {1}! \n\t\t\t Address to execute: 0x{0:X}",
                             sectionMapping[coff_sym->SectionNumber - 1].ToInt64() + coff_sym->Value,
-                            Encoding.Default.GetString(functionname)
+                            Encoding.Default.GetString(functionname))
                         );
                         tmpFuncDelegate foo = (tmpFuncDelegate)
                             Marshal.GetDelegateForFunctionPointer(
@@ -578,14 +589,14 @@ namespace COFFLoader
                             )
                         )
                     );
-                    Debug.WriteLine("\tFunction Name {0} ", functionName);
+                    Debug.WriteLine(string.Format("\tFunction Name {0} ", functionName));
                     string localfunc;
 
                     localfunc = functionName;
-                    Debug.WriteLine(
+                    Debug.WriteLine(string.Format(
                         "\tFunction Name {0} Hash: 0x{1:X}",
                         localfunc,
-                        hash_djb(Encoding.Default.GetBytes(localfunc))
+                        hash_djb(Encoding.Default.GetBytes(localfunc)))
                     );
                     IntPtr functionAddress = new IntPtr(
                         sectionMapping[coff_sym->SectionNumber - 1].ToInt64() + coff_sym->Value

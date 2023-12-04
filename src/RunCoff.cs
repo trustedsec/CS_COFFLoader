@@ -33,7 +33,7 @@ namespace COFFLoader
                 )
                 {
                     CoffParser.CleanUpMemoryAllocations();
-                    return "parseCOFF failed: 1";
+                    return "parseCOFF Beacon compat failed: 1";
                 }
 
                 Debug.WriteLine(
